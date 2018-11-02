@@ -5,6 +5,7 @@
 //     # ORIGINAL AUTHOR:- ANJANI KUMAR 	         #
 //     # EMAIL:-	   anjanik012@gmail.com          #
 //     # GITHUB:-          https://github.com/anjanik012 #
+//     # GITLAB:-	   https://gitlab.com/anjanik012 #	
 //     ###################################################
 
 #include<ncurses.h>       
