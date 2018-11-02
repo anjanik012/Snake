@@ -28,4 +28,11 @@ gcc snake.c -o snake -lncurses -lpthread
 ```bash
 ./snake
 ```
+## License
 
+WTFPL
+
+## Original Author
+
+Anjani Kumar
+email: anjanik012@gmail.com
