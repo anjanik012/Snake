@@ -35,4 +35,5 @@ gcc snake.c -o snake -lncurses -lpthread
 ## Original Author
 
 Anjani Kumar
+
 email: anjanik012@gmail.com
