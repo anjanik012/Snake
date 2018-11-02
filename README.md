@@ -14,7 +14,7 @@ Install git first from your package manager.
 
 ```bash
 git clone https://gitlab.com/anjanik012/snake.git
-cd Snake
+cd snake
 ```
 
 ## Compile
