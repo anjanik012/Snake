@@ -30,7 +30,7 @@ gcc snake.c -o snake -lncurses -lpthread
 ```
 ## License
 
-WTFPL
+[WTFPL](http://www.wtfpl.net/about/)
 
 ## Original Author
 
