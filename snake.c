@@ -17,14 +17,14 @@
 //To store the co-ordinates of snake elements.
 struct Snake{
 	struct Snake *head;
-	int pos_y;
-	int pos_x;
+	unsigned int pos_y;
+	unsigned int pos_x;
 };
 
 //To store the co-ordinates of food.
 struct Food{
-	int pos_y;
-	int pos_x;
+	unsigned int pos_y;
+	unsigned int pos_x;
 };
 
 //Global declarations.
@@ -35,11 +35,11 @@ struct Food food;
 bool food_required = false;
 
 //Score of the player.
-int score = 0;
+unsigned int score = 0;
 
 //Direction of snake.(Like a Mutex)
 struct Dir_handler{
-	int direction;
+	unsigned int current_direction;
 	bool changable;
 };
 struct Dir_handler Direction;
@@ -48,8 +48,8 @@ struct Dir_handler Direction;
 void make_the_snake(void);
 void add_food(void);
 bool is_the_food_eaten(void);
-void update_the_snake(int,int);
-void grow_the_snake(int,int);
+void update_the_snake(unsigned int,unsigned int);
+void grow_the_snake(unsigned int,unsigned int);
 void move_the_snake(void);
 bool is_snake_stuck(void);
 bool is_boundary_reached(void);
@@ -59,12 +59,22 @@ void put_on_screen(void);
 //This function runs on a separate thread from main().
 //Which listens for direction changes in snake motion.
 void *director(){
+	unsigned int d_input;
 	while(true){
-		if(Direction.changable == true){
-		     Direction.direction = getch();
-			if(Direction.direction == 'q')
-	             	    break;
-		}
+		d_input = getch();
+		if(d_input == 'q')
+			break;
+
+		if(Direction.changable == true){			
+			if(Direction.current_direction == KEY_LEFT || Direction.current_direction == KEY_RIGHT){
+				if(d_input == KEY_UP || d_input == KEY_DOWN)
+					Direction.current_direction = d_input;
+			}
+			else{
+				if(d_input == KEY_LEFT || d_input == KEY_RIGHT)
+					Direction.current_direction = d_input;
+			}
+		}		
 	}
 	endwin();
 	exit(1);
@@ -83,7 +93,7 @@ int main()
 	make_the_snake();
 	add_food();
 	put_on_screen();	
-	Direction.direction = KEY_LEFT;	//Snake moves left in the beginning.
+	Direction.current_direction = KEY_LEFT;	//Snake moves left in the beginning.
 	Direction.changable = true;
 
 	//Creating a separate thread to listen for direction changes.
@@ -141,7 +151,7 @@ bool is_the_food_eaten(){
 	return ans;
 }
 
-void update_the_snake(int y , int x){
+void update_the_snake(unsigned int y , unsigned int x){
 	struct Snake *temp = malloc(sizeof(struct Snake));
 	temp->head = snake;
 	temp->pos_y = y;
@@ -156,7 +166,7 @@ void update_the_snake(int y , int x){
 	free(temp2);
 }
 
-void grow_the_snake(int y, int x){
+void grow_the_snake(unsigned int y, unsigned int x){
 	struct Snake *temp = malloc(sizeof(struct Snake));
 	temp->head = snake;
 	temp->pos_y = y;
@@ -165,12 +175,12 @@ void grow_the_snake(int y, int x){
 }
 
 void move_the_snake(){
-	int y = snake->pos_y;
-	int x = snake->pos_x;
 	Direction.changable = false;
+	unsigned int y = snake->pos_y;
+	unsigned int x = snake->pos_x;
 	if(is_the_food_eaten()){
 		food_required = true;
-		switch(Direction.direction){
+		switch(Direction.current_direction){
 			case KEY_UP:
 				grow_the_snake(--y , x);
 				break;
@@ -186,7 +196,7 @@ void move_the_snake(){
 		}	
 	}
 	else{
-		switch(Direction.direction){
+		switch(Direction.current_direction){
 			case KEY_UP:
 				update_the_snake(--y , x);
 				break;
@@ -233,8 +243,6 @@ void put_on_screen(){
 		attron(A_BLINK);
 		mvwprintw(stdscr , LINES - 1  , 1 , "%s" , "YOUR SNAKE IS DEAD!");
 		getch();
-		getch();
-		getch();
 		attroff(A_BLINK);
 		endwin();
 		exit(1) ;
@@ -258,6 +266,22 @@ void put_on_screen(){
 
 	//Quit message.
 	mvwprintw(stdscr , LINES - 1 , 1 , "%s" , "Press q to quit");	
+
+	//Current Direction
+	switch(Direction.current_direction){
+		case KEY_UP:
+			 mvwaddch(stdscr , LINES - 1 , COLS-14 , 'U');
+			 break;
+		case KEY_DOWN:
+			 mvwaddch(stdscr , LINES - 1 , COLS-14 , 'D');
+			 break;
+		case KEY_LEFT:	 
+			 mvwaddch(stdscr , LINES - 1 , COLS-14 , 'L');
+			 break;
+		case KEY_RIGHT:
+			 mvwaddch(stdscr , LINES - 1 , COLS-14 , 'R');
+			 break;
+	}
 
 	//Put Score on screen.
 	mvwprintw(stdscr, LINES - 1 , COLS - 10 , "Score:%d", score); 
