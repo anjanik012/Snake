@@ -20,12 +20,24 @@ struct Snake{
 	unsigned int pos_y;
 	unsigned int pos_x;
 };
-
 //To store the co-ordinates of food.
 struct Food{
 	unsigned int pos_y;
 	unsigned int pos_x;
 };
+
+//A Window in which the snake runs.
+WINDOW *playing_area = NULL;
+
+//Staring positions of the playing area.
+unsigned int starty;
+unsigned int startx;
+
+//Relative dimensions of the playing area.
+#define WLINES 20
+#define WCOLS 70
+
+void create_playing_area(void);
 
 //Global declarations.
 struct Snake *snake = NULL;
@@ -56,6 +68,10 @@ bool is_boundary_reached(void);
 void update_score(void);
 void put_on_screen(void);
 
+//To create a separate thread.
+
+pthread_t direction_thread;
+
 //This function runs on a separate thread from main().
 //Which listens for direction changes in snake motion.
 void *director(){
@@ -82,14 +98,25 @@ void *director(){
 
 int main()
 {
-	initscr();       	//Start of curses mode.
+	initscr();       	//Start of curses mode.	
+	
+	//Checking minimal terminal size.
+	if(LINES <= WLINES || COLS<= WCOLS){
+		endwin();
+		printf("Terminal size must be atleast %d X %d \n" , WLINES , WCOLS);
+		return 0;
+	}
+
 	cbreak();	 	//Disable line buffering.
 	noecho();	  	//Disable echoing of characters.
 	keypad(stdscr , TRUE);  //Enable arrow keys.
 	curs_set(0);     	//Hides the cursor.
-	
-	srand(time(0));		//Seed the random number generator.
+	starty = (LINES -WLINES)/2;
+	startx = (COLS - WCOLS)/2;
 
+	srand(time(0));		//Seed the random number generator.
+	
+	create_playing_area();
 	make_the_snake();
 	add_food();
 	put_on_screen();	
@@ -97,7 +124,6 @@ int main()
 	Direction.changable = true;
 
 	//Creating a separate thread to listen for direction changes.
-	pthread_t direction_thread;
 	pthread_create(&direction_thread , NULL , director , NULL);
 
 	//Snake starts moving.
@@ -110,22 +136,27 @@ int main()
 		}
 		put_on_screen();
 	}
-
 	return 0;
+}
+
+void create_playing_area(){
+	playing_area = newwin(WLINES, WCOLS ,starty , startx);
+	box(playing_area , 0 , 0);
+	wrefresh(playing_area);
 }
 
 #define INIT_SIZE 3
 
 void make_the_snake(){
 	snake = malloc(sizeof(struct Snake));
-	snake->pos_y = LINES/2;
-	snake->pos_x = COLS/2;
+	snake->pos_y = WLINES/2;
+	snake->pos_x = WCOLS/2;
 	struct Snake *temp = snake;
 	for(int i = 1 ; i< INIT_SIZE ; ++i){
 		temp->head = malloc(sizeof(struct Snake));
 		temp = temp->head;
-		temp->pos_y = LINES/2;
-		temp->pos_x = (COLS/2 + i);
+		temp->pos_y = WLINES/2;
+		temp->pos_x = (WCOLS/2 + i);
 	}
 	temp->head = NULL;
 }
@@ -134,8 +165,8 @@ void add_food(){
 	struct Snake *temp = NULL;
 	do{
 		temp = snake;
-	     	food.pos_y = 1 + (rand() % (LINES-2));
-             	food.pos_x = 1 + (rand() % (COLS-2));
+	     	food.pos_y = 1 + (rand() % (WLINES-2));
+             	food.pos_x = 1 + (rand() % (WCOLS-2));
 		while(temp != NULL){
 			if(food.pos_y == temp->pos_y && food.pos_x == temp->pos_x)
 				break;
@@ -229,7 +260,7 @@ bool is_snake_stuck(){
 
 bool is_boundary_reached(){
 	bool ans = false;
-	if(snake->pos_y == 0 || snake->pos_x == 0 || snake->pos_y == LINES-1 || snake->pos_x == COLS-1)
+	if(snake->pos_y == 0|| snake->pos_x == 0 || snake->pos_y ==  WLINES - 1 || snake->pos_x == WCOLS - 1)
 		ans = true;
 	return ans;
 }
@@ -239,51 +270,69 @@ void update_score(){
 }
 
 void put_on_screen(){
+	//Check if snake is dead.
 	if(is_snake_stuck() || is_boundary_reached()){
+		pthread_cancel(direction_thread);
 		attron(A_BLINK);
-		mvwprintw(stdscr , LINES - 1  , 1 , "%s" , "YOUR SNAKE IS DEAD!");
+		mvwprintw(stdscr , starty + WLINES + 1  ,startx , "%s" , "YOUR SNAKE IS DEAD!");
 		getch();
 		attroff(A_BLINK);
 		endwin();
+		printf("You Died!!!\n");
+		if(is_snake_stuck())
+			printf("Don't touch yourself!!!\n");
+		else
+			printf("Mind the boundaries!!!\n");
+		printf("You ate $%d\n", score);
 		exit(1) ;
 	}
-	usleep(90000);	//This call is not in the right place.
-	wclear(stdscr);
 
+	usleep(80000);	//This call is not in the right place.
+	
+	//Clearing previous frame.
+	wclear(stdscr);
+	wclear(playing_area);
+
+	//Drawing the boundary of the playing area.
+	box(playing_area , 0 , 0);
+	
 	//put the snake on screen.
 	struct Snake *temp = snake;
 	while(temp != NULL){
 		if(temp == snake)
-			mvwaddch(stdscr , temp->pos_y , temp->pos_x , '@');
+			mvwaddch(playing_area , temp->pos_y , temp->pos_x , '@');
 		else
-			mvwaddch(stdscr , temp->pos_y , temp->pos_x , 'o');	
+			mvwaddch(playing_area , temp->pos_y , temp->pos_x , 'o');	
 		temp = temp->head;
 	}
 	
 	//Put the food on screen.
 	if(!is_the_food_eaten())	
-		mvwaddch(stdscr , food.pos_y , food.pos_x , '$');
+		mvwaddch(playing_area , food.pos_y , food.pos_x , '$');
 
 	//Quit message.
-	mvwprintw(stdscr , LINES - 1 , 1 , "%s" , "Press q to quit");	
+	mvwprintw(stdscr , starty + WLINES + 1 , startx , "%s" , "Press q to quit");	
 
 	//Current Direction
 	switch(Direction.current_direction){
 		case KEY_UP:
-			 mvwaddch(stdscr , LINES - 1 , COLS-14 , 'U');
+			 mvwaddch(stdscr , starty + WLINES + 1 , startx + WCOLS-14 , 'U');
 			 break;
 		case KEY_DOWN:
-			 mvwaddch(stdscr , LINES - 1 , COLS-14 , 'D');
+			 mvwaddch(stdscr , starty + WLINES + 1 , startx + WCOLS-14 , 'D');
 			 break;
 		case KEY_LEFT:	 
-			 mvwaddch(stdscr , LINES - 1 , COLS-14 , 'L');
+			 mvwaddch(stdscr , starty + WLINES + 1 , startx + WCOLS-14 , 'L');
 			 break;
 		case KEY_RIGHT:
-			 mvwaddch(stdscr , LINES - 1 , COLS-14 , 'R');
+			 mvwaddch(stdscr , starty + WLINES + 1 , startx + WCOLS-14 , 'R');
 			 break;
 	}
 
 	//Put Score on screen.
-	mvwprintw(stdscr, LINES - 1 , COLS - 10 , "Score:%d", score); 
+	mvwprintw(stdscr, starty + WLINES + 1 , startx + WCOLS - 10 , "Score:%d", score); 
+	
+	//Finally display the completed frame.
 	wrefresh(stdscr);
+	wrefresh(playing_area);
 }
