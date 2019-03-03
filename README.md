@@ -10,7 +10,7 @@ ncurses
 
 ## Download
 
-Install git first from your package manager.
+Install git from your package manager.
 
 ```bash
 git clone https://gitlab.com/anjanik012/snake.git
