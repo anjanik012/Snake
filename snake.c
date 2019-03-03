@@ -76,6 +76,9 @@ pthread_t direction_thread;
 //This function runs on a separate thread from main().
 //Which listens for direction changes in snake motion.
 void *director(){
+	//This function gets out of sync sometimes.
+	//More precisely put. Then it goes out of sync when time to sleep increases.
+	//Working on making it properly synchronized with the gamer perception.
 	unsigned int d_input;
 	while(true){
 		d_input = getch();
