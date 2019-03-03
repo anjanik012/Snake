@@ -65,6 +65,7 @@ void grow_the_snake(unsigned int,unsigned int);
 void move_the_snake(void);
 bool is_snake_stuck(void);
 bool is_boundary_reached(void);
+bool is_snake_dead(void);
 void update_score(void);
 void put_on_screen(void);
 
@@ -265,13 +266,20 @@ bool is_boundary_reached(){
 	return ans;
 }
 
+bool is_snake_dead(){
+	if(is_snake_stuck() || is_boundary_reached())
+		return true;	
+	else
+		return false;
+}
+
 void update_score(){
 	score++;
 }
 
 void put_on_screen(){
 	//Check if snake is dead.
-	if(is_snake_stuck() || is_boundary_reached()){
+	if(is_snake_dead()){
 		pthread_cancel(direction_thread);
 		attron(A_BLINK);
 		mvwprintw(stdscr , starty + WLINES + 1  ,startx , "%s" , "YOUR SNAKE IS DEAD!");
