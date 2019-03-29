@@ -1,8 +1,8 @@
 # Snake
 
-Snake is clone of the old Nokia Snake game and is written in C.
+Snake is the clone of old Nokia Snake game, written in C.
 
-Note:Only Works in UNIX based OSs.
+Note:Only Works on POSIX systems.
 
 ## Dependencies
 
