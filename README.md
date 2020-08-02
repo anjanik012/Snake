@@ -4,6 +4,8 @@ Snake is the clone of old Nokia Snake game, written in C.
 
 Note:Only Works on POSIX systems.
 
+![Demo](https://github.com/anjanik012/Snake/blob/master/demo.gif)
+
 ## Dependencies
 
 ncurses
@@ -31,9 +33,3 @@ gcc snake.c -o snake -lncurses -lpthread
 ## License
 
 [WTFPL](http://www.wtfpl.net/about/)
-
-## Original Author
-
-Anjani Kumar
-
-email: anjanik012@gmail.com
