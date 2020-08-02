@@ -1,6 +1,6 @@
 # Snake
 
-Snake is the clone of old Nokia Snake game, written in C.
+Snake is a text based clone of old Nokia Snake game, written in C.
 
 Note:Only Works on POSIX systems.
 
@@ -12,7 +12,7 @@ ncurses
 
 ## Download
 
-Install git from your package manager.
+Clone with git
 
 ```bash
 git clone https://gitlab.com/anjanik012/snake.git
